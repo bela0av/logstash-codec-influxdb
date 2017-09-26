@@ -1,0 +1,5 @@
+.vscode/
+.git/
+*.gem
+Gemfile.lock
+.bundle
