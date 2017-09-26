@@ -9,13 +9,14 @@ require "logstash/util/charset"
 class LogStash::Codecs::InfluxDB < LogStash::Codecs::Base
   config_name "influxdb"
 
-  # Set the desired text format for encoding.
-  config :format, :validate => :string
+  # Time format.
+  config :nanoseconds, :validate => :boolean, :default => false
 
   public
   def register
     require 'bigdecimal'
     def prepare_type(in_object)
+      return in_object.to_s.gsub!(/i\Z/, '').to_i if (in_object =~ /[\d+i]/) #influxdb line integer
       return in_object.to_s.gsub!(/\A"|"\Z/, '') unless (in_object =~ /[\d+\.]/)
       num = BigDecimal.new(in_object.to_s)
       if num.frac == 0
@@ -43,7 +44,8 @@ class LogStash::Codecs::InfluxDB < LogStash::Codecs::Base
         tags[tag_key] = tag_value
       end
       decoded = {}
-      decoded["@timestamp"] = LogStash::Timestamp.at(timestamp.to_i/1000000000) # nanoseconds utc
+      coefficient = nanoseconds ? 1000000000 : 1
+      decoded["@timestamp"] = LogStash::Timestamp.at(timestamp.to_i/coefficient)
       decoded["measurement"] = measurement_name
       decoded["tag"] = tags
       fields_array.each do |field|
