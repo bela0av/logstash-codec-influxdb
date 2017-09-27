@@ -16,7 +16,7 @@ class LogStash::Codecs::InfluxDB < LogStash::Codecs::Base
   def register
     require 'bigdecimal'
     def prepare_type(in_object)
-      return in_object.to_s.gsub!(/i\Z/, '').to_i if (in_object =~ /[\d+i]/) #influxdb line integer
+      return in_object.to_s.gsub!(/i\Z/, '').to_i if (in_object =~ /\d+i/) #influxdb line integer
       return in_object.to_s.gsub!(/\A"|"\Z/, '') unless (in_object =~ /[\d+\.]/)
       num = BigDecimal.new(in_object.to_s)
       if num.frac == 0
